@@ -90,6 +90,9 @@ Detail: https://github.com/JeffreySu/WeiXinMPSDK/blob/master/license.md
     修改标识：Senparc - 20180829
     修改描述：v15.4.0 RequestMsgType 枚举添加 NeuChar 类型
 
+    修改标识：Senparc - 20181018
+    修改描述：添加Reimburse_Status枚举【发票报销状态】
+
 ----------------------------------------------------------------*/
 
 using System;
@@ -99,30 +102,30 @@ namespace Senparc.Weixin.MP
 {
 
 
-///// <summary>
-///// 接收消息类型
-///// </summary>
-//public enum RequestMsgType
-//{
-//    Unknown = -1,//未知类型
-//    Text = 0, //文本
-//    Location = 1, //地理位置
-//    Image = 2, //图片
-//    Voice = 3, //语音
-//    Video = 4, //视频
-//    Link = 5, //连接信息
-//    ShortVideo = 6,//小视频
-//    Event = 7, //事件推送
-//    File = 8,//文件类型
+    ///// <summary>
+    ///// 接收消息类型
+    ///// </summary>
+    //public enum RequestMsgType
+    //{
+    //    Unknown = -1,//未知类型
+    //    Text = 0, //文本
+    //    Location = 1, //地理位置
+    //    Image = 2, //图片
+    //    Voice = 3, //语音
+    //    Video = 4, //视频
+    //    Link = 5, //连接信息
+    //    ShortVideo = 6,//小视频
+    //    Event = 7, //事件推送
+    //    File = 8,//文件类型
 
-//    NeuChar = 99//NeuChar请求
-//}
+    //    NeuChar = 99//NeuChar请求
+    //}
 
 
-/// <summary>
-/// 当RequestMsgType类型为Event时，Event属性的类型
-/// </summary>
-public enum Event
+    /// <summary>
+    /// 当RequestMsgType类型为Event时，Event属性的类型
+    /// </summary>
+    public enum Event
     {
         /// <summary>
         /// 进入会话（似乎已从官方API中移除）
@@ -932,21 +935,21 @@ public enum Event
     public enum QrCode_ActionName
     {
         /// <summary>
-        /// 临时
+        /// 临时的整型参数值
         /// </summary>
-        QR_SCENE,
-        /// <summary>
-        /// 永久
-        /// </summary>
-        QR_LIMIT_SCENE,
-        /// <summary>
-        /// 永久的字符串
-        /// </summary>
-        QR_LIMIT_STR_SCENE,
+        QR_SCENE = 0,
         /// <summary>
         /// 临时的字符串参数值
         /// </summary>
-        QR_STR_SCENE
+        QR_STR_SCENE = 3,
+        /// <summary>
+        /// 永久的整型参数值
+        /// </summary>
+        QR_LIMIT_SCENE = 1,
+        /// <summary>
+        /// 永久的字符串参数值
+        /// </summary>
+        QR_LIMIT_STR_SCENE = 2
     }
 
 
@@ -1048,6 +1051,29 @@ public enum Event
         /// 税务刮奖
         /// </summary>
         PRODUCT_8
+    }
+
+    /// <summary>
+    /// 发票报销状态
+    /// </summary>
+    public enum Reimburse_Status
+    {
+        /// <summary>
+        /// 发票初始状态，未锁定
+        /// </summary>
+        INVOICE_REIMBURSE_INIT,
+        /// <summary>
+        /// 发票已锁定
+        /// </summary>
+        INVOICE_REIMBURSE_LOCK,
+        /// <summary>
+        /// 发票已核销
+        /// </summary>
+        INVOICE_REIMBURSE_CLOSURE,
+        /// <summary>
+        /// 发票被冲红
+        /// </summary>
+        INVOICE_REIMBURSE_CANCEL
     }
 
     #endregion
