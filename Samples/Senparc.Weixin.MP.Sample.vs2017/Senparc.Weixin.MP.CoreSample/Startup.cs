@@ -10,7 +10,6 @@ using Senparc.CO2NET.Cache;
 using Senparc.Weixin.RegisterServices;
 using Senparc.CO2NET.RegisterServices;
 using Senparc.Weixin.Entities;
-using Senparc.Weixin.MP.Sample.CommonService.Utilities;
 using Senparc.CO2NET.Cache.Memcached;//DPBMARK Memcached DPBMARK_END
 using Senparc.Weixin.Cache.Memcached;//DPBMARK Memcached DPBMARK_END
 using Senparc.CO2NET.Cache.Redis;//DPBMARK Redis DPBMARK_END
@@ -21,6 +20,7 @@ using Senparc.Weixin.TenPay;//DPBMARK TenPay DPBMARK_END
 using Senparc.Weixin.Work;//DPBMARK Work DPBMARK_END
 using Senparc.Weixin.WxOpen;//DPBMARK MiniProgram DPBMARK_END
 using Senparc.CO2NET.Utilities;
+using System;
 
 namespace Senparc.Weixin.MP.CoreSample
 {
@@ -38,6 +38,7 @@ namespace Senparc.Weixin.MP.CoreSample
         {
             services.AddMvc();
 
+            //services.AddHttpContextAccessor();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddMemoryCache();//使用本地缓存必须添加
             services.AddSession();//使用Session
@@ -125,7 +126,7 @@ namespace Senparc.Weixin.MP.CoreSample
 
             //配置Memcached缓存（按需，独立）
             var memcachedConfigurationStr = senparcSetting.Value.Cache_Memcached_Configuration;
-            var useMemcached = !string.IsNullOrEmpty(memcachedConfigurationStr) && memcachedConfigurationStr != "Memcached配置";
+            var useMemcached = !string.IsNullOrEmpty(memcachedConfigurationStr) && memcachedConfigurationStr != "#{Cache_Memcached_Configuration}#";
 
             if (useMemcached) //这里为了方便不同环境的开发者进行配置，做成了判断的方式，实际开发环境一般是确定的，这里的if条件可以忽略
             {
@@ -153,6 +154,8 @@ namespace Senparc.Weixin.MP.CoreSample
             register.RegisterTraceLog(ConfigTraceLog);//配置TraceLog
 
             #endregion
+
+            CO2NET.APM.Config.DataExpire = TimeSpan.FromMinutes(60);//测试APM缓存过期时间（默认情况下可以不用设置）
 
             #endregion
 
@@ -225,8 +228,8 @@ namespace Senparc.Weixin.MP.CoreSample
 
                 //注册第三方平台（可注册多个）
                 .RegisterOpenComponent(senparcWeixinSetting.Value,
-                    //getComponentVerifyTicketFunc
-                    componentAppId =>
+                   //getComponentVerifyTicketFunc
+                   async componentAppId =>
                     {
                         var dir = Path.Combine(ServerUtility.ContentRootMapPath("~/App_Data/OpenTicket"));
                         if (!Directory.Exists(dir))
@@ -239,14 +242,14 @@ namespace Senparc.Weixin.MP.CoreSample
                         {
                             using (var sr = new StreamReader(fs))
                             {
-                                var ticket = sr.ReadToEnd();
+                                var ticket = await sr.ReadToEndAsync();
                                 return ticket;
                             }
                         }
                     },
 
-                     //getAuthorizerRefreshTokenFunc
-                     (componentAppId, auhtorizerId) =>
+                  //getAuthorizerRefreshTokenFunc
+                  async (componentAppId, auhtorizerId) =>
                      {
                          var dir = Path.Combine(ServerUtility.ContentRootMapPath("~/App_Data/AuthorizerInfo/" + componentAppId));
                          if (!Directory.Exists(dir))

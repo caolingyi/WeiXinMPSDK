@@ -85,7 +85,6 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers.WxOpen
 
             try
             {
-
                 /* 如果需要添加消息去重功能，只需打开OmitRepeatedMessage功能，SDK会自动处理。
                  * 收到重复消息通常是因为微信服务器没有及时收到响应，会持续发送2-5条不等的相同内容的RequestMessage*/
                 messageHandler.OmitRepeatedMessage = true;
@@ -135,7 +134,7 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers.WxOpen
         {
             var data = new
             {
-                msg = string.Format("服务器时间：{0}，昵称：{1}", SystemTime.Now, nickName)
+                msg = string.Format("服务器时间：{0}，昵称：{1}", SystemTime.Now.LocalDateTime, nickName)
             };
             return Json(data);
         }
@@ -148,21 +147,29 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers.WxOpen
         [HttpPost]
         public ActionResult OnLogin(string code)
         {
-            var jsonResult = SnsApi.JsCode2Json(WxOpenAppId, WxOpenAppSecret, code);
-            if (jsonResult.errcode == ReturnCode.请求成功)
+            try
             {
-                //Session["WxOpenUser"] = jsonResult;//使用Session保存登陆信息（不推荐）
-                //使用SessionContainer管理登录信息（推荐）
-                var unionId = "";
-                var sessionBag = SessionContainer.UpdateSession(null, jsonResult.openid, jsonResult.session_key, unionId);
+                var jsonResult = SnsApi.JsCode2Json(WxOpenAppId, WxOpenAppSecret, code);
+                if (jsonResult.errcode == ReturnCode.请求成功)
+                {
+                    //Session["WxOpenUser"] = jsonResult;//使用Session保存登陆信息（不推荐）
+                    //使用SessionContainer管理登录信息（推荐）
+                    var unionId = "";
+                    var sessionBag = SessionContainer.UpdateSession(null, jsonResult.openid, jsonResult.session_key, unionId);
 
-                //注意：生产环境下SessionKey属于敏感信息，不能进行传输！
-                return Json(new { success = true, msg = "OK", sessionId = sessionBag.Key, sessionKey = sessionBag.SessionKey });
+                    //注意：生产环境下SessionKey属于敏感信息，不能进行传输！
+                    return Json(new { success = true, msg = "OK", sessionId = sessionBag.Key, sessionKey = sessionBag.SessionKey });
+                }
+                else
+                {
+                    return Json(new { success = false, msg = jsonResult.errmsg });
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return Json(new { success = false, msg = jsonResult.errmsg });
+                return Json(new { success = false, msg = ex.Message });
             }
+
         }
 
         [HttpPost]
@@ -230,6 +237,13 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers.WxOpen
             }
         }
 
+        /// <summary>
+        /// 解密电话号码
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <param name="encryptedData"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
         public ActionResult DecryptPhoneNumber(string sessionId, string encryptedData, string iv)
         {
             var sessionBag = SessionContainer.GetSession(sessionId);
@@ -240,6 +254,30 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers.WxOpen
                 //throw new WeixinException("解密PhoneNumber异常测试");//启用这一句，查看客户端返回的异常信息
 
                 return Json(new { success = true, phoneNumber = phoneNumber });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, msg = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 解密运动步数
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <param name="encryptedData"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public ActionResult DecryptRunData(string sessionId, string encryptedData, string iv)
+        {
+            var sessionBag = SessionContainer.GetSession(sessionId);
+            try
+            {
+                var runData = Senparc.Weixin.WxOpen.Helpers.EncryptHelper.DecryptRunData(sessionId, encryptedData, iv);
+
+                //throw new WeixinException("解密PhoneNumber异常测试");//启用这一句，查看客户端返回的异常信息
+
+                return Json(new { success = true, runData = runData });
             }
             catch (Exception ex)
             {

@@ -1,5 +1,5 @@
 ﻿/*----------------------------------------------------------------
-    Copyright (C) 2018 Senparc
+    Copyright (C) 2019 Senparc
     
     文件名：TenPayV3Controller.cs
     文件功能描述：微信支付V3Controller
@@ -47,6 +47,7 @@ using Senparc.Weixin.MP.Sample.CommonService.Utilities;
 using Senparc.CO2NET.Extensions;
 using Senparc.CO2NET.Helpers;
 using Senparc.CO2NET.Utilities;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Senparc.Weixin.MP.CoreSample.Controllers
 {
@@ -144,7 +145,7 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers
             {
                 return Content(ex.ToString());
             }
-        
+
         }
 
         //需要OAuth登录
@@ -242,25 +243,24 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers
             var bw = new ZXing.BarcodeWriterPixelData();
 
             var pixelData = bw.Write(bitMatrix);
-            using (var bitmap = new System.Drawing.Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb))
-            {
-                using (var ms = new MemoryStream())
-                {
-                    var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, pixelData.Width, pixelData.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
-                    try
-                    {
-                        // we assume that the row stride of the bitmap is aligned to 4 byte multiplied by the width of the image   
-                        System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
-                    }
-                    finally
-                    {
-                        bitmap.UnlockBits(bitmapData);
-                    }
-                    bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            var bitmap = new System.Drawing.Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
 
-                    return File(ms, "image/png");
-                }
+            var fileStream = new MemoryStream();
+
+            var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, pixelData.Width, pixelData.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+            try
+            {
+                // we assume that the row stride of the bitmap is aligned to 4 byte multiplied by the width of the image   
+                System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
             }
+            finally
+            {
+                bitmap.UnlockBits(bitmapData);
+            }
+            bitmap.Save(_fileStream, System.Drawing.Imaging.ImageFormat.Png);
+            fileStream.Seek(0, SeekOrigin.Begin);
+
+            return File(fileStream, "image/png");
         }
 
         public ActionResult NativeNotifyUrl()
@@ -324,7 +324,7 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers
                 res.SetParameter("err_code_des", "OK");
 
                 string nativeReqSign = res.CreateMd5Sign("key", TenPayV3Info.Key);
-                res.SetParameter("sign", result.sign);
+                res.SetParameter("sign", nativeReqSign);
             }
             catch (Exception)
             {
@@ -538,7 +538,7 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers
             //设置package订单参数
             packageReqHandler.SetParameter("appid", TenPayV3Info.AppId);		  //公众账号ID
             packageReqHandler.SetParameter("mch_id", TenPayV3Info.MchId);		  //商户号
-            packageReqHandler.SetParameter("transaction_id", "");       //填入微信订单号 
+            packageReqHandler.SetParameter("transaction_id", "");       //填入微信订单号
             packageReqHandler.SetParameter("out_trade_no", "");         //填入商家订单号
             packageReqHandler.SetParameter("nonce_str", nonceStr);             //随机字符串
             string sign = packageReqHandler.CreateMd5Sign("key", TenPayV3Info.Key);
@@ -585,21 +585,48 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers
         /// <returns></returns>
         public ActionResult Refund()
         {
-            string nonceStr = TenPayV3Util.GetNoncestr();
+            try
+            {
+                WeixinTrace.SendCustomLog("进入退款流程", "1");
 
-            string outTradeNo = HttpContext.Session.GetString("BillNo");
-            string outRefundNo = "OutRefunNo-" + SystemTime.Now.Ticks;
-            int totalFee = int.Parse(HttpContext.Session.GetString("BillFee"));
-            int refundFee = totalFee;
-            string opUserId = TenPayV3Info.MchId;
-            var notifyUrl = "https://sdk.weixin.senparc.com/TenPayV3/RefundNotifyUrl";
-            var dataInfo = new TenPayV3RefundRequestData(TenPayV3Info.AppId, TenPayV3Info.MchId, TenPayV3Info.Key,
-                null, nonceStr, null, outTradeNo, outRefundNo, totalFee, refundFee, opUserId, null, notifyUrl: notifyUrl);
-            var cert = @"D:\cert\apiclient_cert_SenparcRobot.p12";//根据自己的证书位置修改
-            var password = TenPayV3Info.MchId;//默认为商户号，建议修改
-            var result = TenPayV3.Refund(dataInfo, cert, password);
-            return Content(string.Format("退款结果：{0} {1}。您可以刷新当前页面查看最新结果。", result.result_code, result.err_code_des));
-            //return Json(result, JsonRequestBehavior.AllowGet);
+                string nonceStr = TenPayV3Util.GetNoncestr();
+
+                string outTradeNo = HttpContext.Session.GetString("BillNo");
+
+                WeixinTrace.SendCustomLog("进入退款流程", "2 outTradeNo：" + outTradeNo);
+
+
+                string outRefundNo = "OutRefunNo-" + SystemTime.Now.Ticks;
+                int totalFee = int.Parse(HttpContext.Session.GetString("BillFee"));
+                int refundFee = totalFee;
+                string opUserId = TenPayV3Info.MchId;
+                var notifyUrl = "https://sdk.weixin.senparc.com/TenPayV3/RefundNotifyUrl";
+                var dataInfo = new TenPayV3RefundRequestData(TenPayV3Info.AppId, TenPayV3Info.MchId, TenPayV3Info.Key,
+                    null, nonceStr, null, outTradeNo, outRefundNo, totalFee, refundFee, opUserId, null, notifyUrl: notifyUrl);
+
+                #region 旧方法
+                //var cert = @"D:\cert\apiclient_cert_SenparcRobot.p12";//根据自己的证书位置修改
+                //var password = TenPayV3Info.MchId;//默认为商户号，建议修改
+                //var result = TenPayV3.Refund(dataInfo, cert, password);
+                #endregion
+
+                #region 新方法（Senparc.Weixin v6.4.4+）
+                var result = TenPayV3.Refund(dataInfo);//证书地址、密码，在配置文件中设置，并在注册微信支付信息时自动记录
+                #endregion
+
+                WeixinTrace.SendCustomLog("进入退款流程", "3 Result：" + result.ToJson());
+
+
+                return Content(string.Format("退款结果：{0} {1}。您可以刷新当前页面查看最新结果。", result.result_code, result.err_code_des));
+                //return Json(result, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                WeixinTrace.WeixinExceptionLog(new WeixinException(ex.Message, ex));
+
+                throw;
+            }
+
 
             #region 原始方法
 
@@ -923,6 +950,8 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers
             }
         }
 
+        private Stream _fileStream = null;
+
         /// <summary>
         /// 显示二维码
         /// </summary>
@@ -945,25 +974,26 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers
             var bw = new ZXing.BarcodeWriterPixelData();
 
             var pixelData = bw.Write(bitMatrix);
-            using (var bitmap = new System.Drawing.Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb))
+            var bitmap = new System.Drawing.Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+            var fileStream = new MemoryStream();
+            var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, pixelData.Width, pixelData.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+            try
             {
-                using (var ms = new MemoryStream())
-                {
-                    var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, pixelData.Width, pixelData.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
-                    try
-                    {
-                        // we assume that the row stride of the bitmap is aligned to 4 byte multiplied by the width of the image   
-                        System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
-                    }
-                    finally
-                    {
-                        bitmap.UnlockBits(bitmapData);
-                    }
-                    bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-
-                    return File(ms, "image/png");
-                }
+                // we assume that the row stride of the bitmap is aligned to 4 byte multiplied by the width of the image   
+                System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
             }
+            finally
+            {
+                bitmap.UnlockBits(bitmapData);
+            }
+
+            fileStream.Flush();//.net core 必须要加
+            fileStream.Position = 0;//.net core 必须要加
+
+            bitmap.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
+
+            fileStream.Seek(0, SeekOrigin.Begin);
+            return File(fileStream, "image/png");
         }
 
 
@@ -1095,14 +1125,12 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers
             }
         }
 
+
         #endregion
 
         #region 付款到银行卡
 
         //TODO：完善
-
-
-
 
         #endregion
     }

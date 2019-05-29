@@ -1,5 +1,5 @@
 ﻿/*----------------------------------------------------------------
-    Copyright (C) 2018 Senparc
+    Copyright (C) 2019 Senparc
 
     文件名：WebSocketHelper.cs
     文件功能描述：WebSocket处理类
@@ -73,7 +73,7 @@ namespace Senparc.WebSocket
 
             Byte[] bytes = System.Text.Encoding.UTF8.GetBytes(newString);
             await _webSocket.SendAsync(new ArraySegment<byte>(bytes),
-                              WebSocketMessageType.Text, true, _cancellationToken);
+                              WebSocketMessageType.Text, true, _cancellationToken).ConfigureAwait(false);
         }
     }
 }

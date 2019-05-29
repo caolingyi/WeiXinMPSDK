@@ -1,7 +1,7 @@
 ﻿#region Apache License Version 2.0
 /*----------------------------------------------------------------
 
-Copyright 2018 Jeffrey Su & Suzhou Senparc Network Technology Co.,Ltd.
+Copyright 2019 Jeffrey Su & Suzhou Senparc Network Technology Co.,Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
 except in compliance with the License. You may obtain a copy of the License at
@@ -19,7 +19,7 @@ Detail: https://github.com/JeffreySu/WeiXinMPSDK/blob/master/license.md
 #endregion Apache License Version 2.0
 
 /*----------------------------------------------------------------
-    Copyright (C) 2018 Senparc
+    Copyright (C) 2019 Senparc
     
     文件名：WxAppApi.cs
     文件功能描述：小程序WxApp目录下面的接口
@@ -45,7 +45,7 @@ using Senparc.Weixin.CommonAPIs;
 using Senparc.Weixin.Entities;
 //using Senparc.Weixin.Helpers;
 using Senparc.CO2NET.Extensions;
-using Senparc.Weixin.HttpUtility;
+using Senparc.CO2NET.HttpUtility;
 using Senparc.Weixin.MP;
 using Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp.WxAppJson;
 using Senparc.CO2NET.Helpers;
@@ -556,7 +556,7 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
 
         #endregion
 
-#if !NET35 && !NET40
+
         #region 异步方法
 
         /// <summary>
@@ -577,14 +577,14 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
         {
             using (var ms = new MemoryStream())
             {
-                var result = await WxAppApi.GetWxaCodeAsync(accessTokenOrAppId, ms, path, width, auto_color, lineColor, isHyaline, timeOut);
+                var result = await WxAppApi.GetWxaCodeAsync(accessTokenOrAppId, ms, path, width, auto_color, lineColor, isHyaline, timeOut).ConfigureAwait(false);
                 ms.Seek(0, SeekOrigin.Begin);
                 //储存图片
                 File.Delete(filePath);
                 using (var fs = new FileStream(filePath, FileMode.CreateNew))
                 {
-                    await ms.CopyToAsync(fs);
-                    await fs.FlushAsync();
+                    await ms.CopyToAsync(fs).ConfigureAwait(false);
+                    await fs.FlushAsync().ConfigureAwait(false);
                 }
                 return result;
             }
@@ -621,13 +621,13 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
 
                 var data = new { scene = scene, page = page, width = width, line_color = lineColor, is_hyaline = isHyaline };
                 JsonSetting jsonSetting = new JsonSetting(true);
-                await Post.DownloadAsync(url, SerializerHelper.GetJsonString(data, jsonSetting), stream);
+                await Post.DownloadAsync(url, SerializerHelper.GetJsonString(data, jsonSetting), stream).ConfigureAwait(false);
 
                 return new WxJsonResult()
                 {
                     errcode = ReturnCode.请求成功
                 };
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -650,14 +650,14 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
         {
             using (var ms = new MemoryStream())
             {
-                var result = await WxAppApi.GetWxaCodeUnlimitAsync(accessTokenOrAppId, ms, scene, page, width, auto_color, lineColor, isHyaline, timeOut);
+                var result = await WxAppApi.GetWxaCodeUnlimitAsync(accessTokenOrAppId, ms, scene, page, width, auto_color, lineColor, isHyaline, timeOut).ConfigureAwait(false);
                 ms.Seek(0, SeekOrigin.Begin);
                 //储存图片
                 File.Delete(filePath);
                 using (var fs = new FileStream(filePath, FileMode.CreateNew))
                 {
-                    await ms.CopyToAsync(fs);
-                    await fs.FlushAsync();
+                    await ms.CopyToAsync(fs).ConfigureAwait(false);
+                    await fs.FlushAsync().ConfigureAwait(false);
                 }
                 return result;
             }
@@ -691,13 +691,13 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
 
                 var data = new { path = path, width = width, line_color = lineColor, is_hyaline = isHyaline };
                 JsonSetting jsonSetting = new JsonSetting(true);
-                await Post.DownloadAsync(url, SerializerHelper.GetJsonString(data, jsonSetting), stream);
+                await CO2NET.HttpUtility.Post.DownloadAsync(url, SerializerHelper.GetJsonString(data, jsonSetting), stream).ConfigureAwait(false);
 
                 return new WxJsonResult()
                 {
                     errcode = ReturnCode.请求成功
                 };
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -719,13 +719,13 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
                 var url = string.Format(urlFormat, accessToken);
 
                 var data = new { path = path, width = width };
-                await Post.DownloadAsync(url, SerializerHelper.GetJsonString(data), stream);
+                await Post.DownloadAsync(url, SerializerHelper.GetJsonString(data), stream).ConfigureAwait(false);
 
                 return new WxJsonResult()
                 {
                     errcode = ReturnCode.请求成功
                 };
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -742,14 +742,14 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
         {
             using (var ms = new MemoryStream())
             {
-                var result = await WxAppApi.CreateWxQrCodeAsync(accessTokenOrAppId, ms, path, width);
+                var result = await WxAppApi.CreateWxQrCodeAsync(accessTokenOrAppId, ms, path, width).ConfigureAwait(false);
                 ms.Seek(0, SeekOrigin.Begin);
                 //储存图片
                 File.Delete(filePath);
                 using (var fs = new FileStream(filePath, FileMode.CreateNew))
                 {
-                    await ms.CopyToAsync(fs);
-                    await fs.FlushAsync();
+                    await ms.CopyToAsync(fs).ConfigureAwait(false);
+                    await fs.FlushAsync().ConfigureAwait(false);
                 }
                 return result;
             }
@@ -774,8 +774,8 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
                 var signature = EncryptHelper.GetHmacSha256("", sessionKey);
                 var url = urlFormat.FormatWith(accessToken, signature, openId, sigMethod);
 
-                return await CommonJsonSend.SendAsync<WxJsonResult>(null, url, null, CommonJsonSendType.GET);
-            }, accessTokenOrAppId);
+                return await CommonJsonSend.SendAsync<WxJsonResult>(null, url, null, CommonJsonSendType.GET).ConfigureAwait(false);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
 
@@ -799,9 +799,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
 
                 var data = new { related_name = relatedName, related_credential = relatedCredential, related_address = relatedAddress, related_proof_material = relatedProofMaterial };
 
-                return await CommonJsonSend.SendAsync<AddNearbyPoiJsonResult>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<AddNearbyPoiJsonResult>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -822,9 +822,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
 
                 var data = new { page = page, page_rows = page_rows };
 
-                return await CommonJsonSend.SendAsync<GetNearbyPoiListJsonResult>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<GetNearbyPoiListJsonResult>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -844,9 +844,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
 
                 var data = new { poi_id = poi_id };
 
-                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -867,9 +867,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
 
                 var data = new { poi_id = poi_id, status = status };
 
-                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -889,9 +889,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
                 var url = urlFormat.FormatWith(accessToken);
                 var data = new { content = content };
 
-                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -911,9 +911,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
                 var url = urlFormat.FormatWith(accessToken);
                 var fileDic = new Dictionary<string, string>();
                 fileDic["media"] = filePath;
-                return await CO2NET.HttpUtility.Post.PostFileGetJsonAsync<WxJsonResult>(url, fileDictionary: fileDic, timeOut: timeOut);
+                return await CO2NET.HttpUtility.Post.PostFileGetJsonAsync<WxJsonResult>(url, fileDictionary: fileDic, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -938,9 +938,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
                     plugin_appid = pluginAppid
                 };
 
-                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -967,9 +967,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
                     num
                 };
 
-                return await CommonJsonSend.SendAsync<DevPluginResultJson>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<DevPluginResultJson>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -994,9 +994,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
                     appid = appId
                 };
 
-                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1019,9 +1019,9 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
                     action = "list"
                 };
 
-                return await CommonJsonSend.SendAsync<GetPluginListResultJson>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<GetPluginListResultJson>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1046,12 +1046,11 @@ namespace Senparc.Weixin.WxOpen.AdvancedAPIs.WxApp
                     plugin_appid = appId
                 };
 
-                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut);
+                return await CommonJsonSend.SendAsync<WxJsonResult>(accessToken, url, data, timeOut: timeOut).ConfigureAwait(false);
 
-            }, accessTokenOrAppId);
+            }, accessTokenOrAppId).ConfigureAwait(false);
         }
 
         #endregion
-#endif
     }
 }
